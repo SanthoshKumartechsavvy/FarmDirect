@@ -17,6 +17,11 @@ const _layout = () => {
             name='enterUsername'
             options={{ headerShown: false}}
         />
+        <Stack.Screen
+            name='roleSelect'
+            options={{ headerShown: false}}
+        />
+
         
       </Stack>
     </>

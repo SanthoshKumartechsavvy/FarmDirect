@@ -13,6 +13,7 @@ const FormField = ({title, value, placeholder, handleChangeText, ...props}) => {
             placeholderTextColor="#7b7b8b"
             onChangeText={handleChangeText}
         />
+        
       </View>
     </View>
   )
