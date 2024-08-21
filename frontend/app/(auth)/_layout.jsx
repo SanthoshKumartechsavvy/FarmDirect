@@ -13,6 +13,10 @@ const _layout = () => {
             name='otpVerify'
             options={{ headerShown: false}}
         />
+        <Stack.Screen
+            name='enterUsername'
+            options={{ headerShown: false}}
+        />
         
       </Stack>
     </>
