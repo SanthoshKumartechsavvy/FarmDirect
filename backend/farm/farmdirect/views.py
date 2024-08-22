@@ -14,7 +14,6 @@ from .serializers import UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    
     queryset = UserModel.objects.all()
     serializer_class = UserSerializer
 
@@ -37,17 +36,16 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         return Response(
-            "User active or Please enter the correct OTP.",
+            "User is already active or the OTP is incorrect.",
             status=status.HTTP_400_BAD_REQUEST,
         )
 
     @action(detail=True, methods=["PATCH"])
     def regenerate_otp(self, request, pk=None):
-        
         instance = self.get_object()
         if int(instance.max_otp_try) == 0 and timezone.now() < instance.otp_max_out:
             return Response(
-                "Max OTP try reached, try after an hour",
+                "Max OTP tries reached. Please try again after an hour.",
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -59,7 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
         instance.otp_expiry = otp_expiry
         instance.max_otp_try = max_otp_try
         if max_otp_try == 0:
-            # Set cool down time
+            # Set cool-down time
             otp_max_out = timezone.now() + datetime.timedelta(hours=1)
             instance.otp_max_out = otp_max_out
         elif max_otp_try == -1:
@@ -69,4 +67,4 @@ class UserViewSet(viewsets.ModelViewSet):
             instance.max_otp_try = max_otp_try
         instance.save()
         send_otp(instance.phone_number, otp)
-        return Response("Successfully generate new OTP.", status=status.HTTP_200_OK)
+        return Response("Successfully generated a new OTP.", status=status.HTTP_200_OK)
