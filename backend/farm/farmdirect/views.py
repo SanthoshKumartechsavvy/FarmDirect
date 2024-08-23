@@ -1,17 +1,18 @@
-import datetime
 import random
-
-from django.conf import settings
-from django.utils import timezone
-from rest_framework import status, viewsets
+from datetime import timedelta
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.utils import timezone
+from django.conf import settings
 
 from farmdirect.utils import send_otp
-
 from .models import UserModel
 from .serializers import UserSerializer
 
+class UserRegistrationView(generics.CreateAPIView):
+    queryset = UserModel.objects.all()
+    serializer_class = UserSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = UserModel.objects.all()
@@ -20,9 +21,10 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["PATCH"])
     def verify_otp(self, request, pk=None):
         instance = self.get_object()
+        otp = request.data.get("otp")
         if (
             not instance.is_active
-            and instance.otp == request.data.get("otp")
+            and instance.otp == otp
             and instance.otp_expiry
             and timezone.now() < instance.otp_expiry
         ):
@@ -50,7 +52,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         otp = random.randint(1000, 9999)
-        otp_expiry = timezone.now() + datetime.timedelta(minutes=10)
+        otp_expiry = timezone.now() + timedelta(minutes=10)
         max_otp_try = int(instance.max_otp_try) - 1
 
         instance.otp = otp
@@ -58,13 +60,11 @@ class UserViewSet(viewsets.ModelViewSet):
         instance.max_otp_try = max_otp_try
         if max_otp_try == 0:
             # Set cool-down time
-            otp_max_out = timezone.now() + datetime.timedelta(hours=1)
+            otp_max_out = timezone.now() + timedelta(hours=1)
             instance.otp_max_out = otp_max_out
-        elif max_otp_try == -1:
-            instance.max_otp_try = settings.MAX_OTP_TRY
         else:
             instance.otp_max_out = None
-            instance.max_otp_try = max_otp_try
+        
         instance.save()
         send_otp(instance.phone_number, otp)
         return Response("Successfully generated a new OTP.", status=status.HTTP_200_OK)

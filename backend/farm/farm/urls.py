@@ -25,7 +25,8 @@ router.register("user", views.UserViewSet, basename="user")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls'))
+    path('api-auth/', include('rest_framework.urls')),
+    path('register/', views.UserRegistrationView.as_view(), name='register'),
 ]
 
 urlpatterns += router.urls

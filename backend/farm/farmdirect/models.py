@@ -37,7 +37,7 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
     )
     otp = models.CharField(max_length=6)
     otp_expiry = models.DateTimeField(blank=True, null=True)
-    max_otp_try = models.CharField(max_length=2, default=settings.MAX_OTP_TRY)
+    max_otp_try = models.IntegerField(default=settings.MAX_OTP_TRY)
     otp_max_out = models.DateTimeField(blank=True, null=True)
 
     is_active = models.BooleanField(default=False)
@@ -52,12 +52,25 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
         return self.phone_number
 
 class UserProfile(models.Model):
+    USER_ROLES = (
+        ('farmer', 'Farmer'),
+        ('buyer', 'Buyer'),
+    )
+    
     user = models.OneToOneField(
         UserModel,
         related_name="profile",
         on_delete=models.CASCADE,
         primary_key=True,
     )
-    first_name = models.CharField(max_length=50, null=False, blank=False)
-    last_name = models.CharField(max_length=50, null=False, blank=False)
-    address = models.TextField(null=False, blank=False)
+    username = models.CharField(max_length=50, unique=True, default="default_username")
+    role = models.CharField(
+        max_length=10,
+        choices=USER_ROLES,
+        default='farmer',
+        null=False,
+        blank=False
+    )
+    
+    def __str__(self):
+        return f"{self.user.phone_number} - {self.role}"
