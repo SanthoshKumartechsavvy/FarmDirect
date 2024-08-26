@@ -21,12 +21,16 @@ from rest_framework.routers import DefaultRouter
 from farmdirect import views
 
 router = DefaultRouter()
-router.register("user", views.UserViewSet, basename="user")
 
+router.register(r'users', views.UserViewSet, basename='user')  # Register UserViewSet
+router.register(r'products', views.ProductViewSet, basename='product')  # Register ProductViewSet
+router.register(r'orders', views.OrderViewSet, basename='order') 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('register/', views.UserRegistrationView.as_view(), name='register'),
+    path('login/', views.LoginView.as_view(), name='login'),
+     path('', include(router.urls)),
 ]
 
 urlpatterns += router.urls

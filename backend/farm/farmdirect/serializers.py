@@ -3,7 +3,8 @@ import random
 from django.conf import settings
 from rest_framework import serializers
 from farmdirect.utils import send_otp
-from .models import UserModel, UserProfile
+from .models import UserModel, UserProfile, Product, Order
+from django.contrib.auth import authenticate
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,3 +40,31 @@ class UserSerializer(serializers.ModelSerializer):
         
         send_otp(validated_data["phone_number"], otp)
         return user
+    
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'
+        
+        
+        
+class LoginSerializer(serializers.Serializer):
+    phone_number = serializers.CharField()
+    otp = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        phone_number = data.get('phone_number')
+        otp = data.get('otp')
+
+        # Authenticate the user
+        user = UserModel.objects.filter(phone_number=phone_number, otp=otp).first()
+
+        if user and user.is_active:
+            return user
+        else:
+            raise serializers.ValidationError("Invalid credentials or user not active.")

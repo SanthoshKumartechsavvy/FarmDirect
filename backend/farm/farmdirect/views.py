@@ -1,14 +1,15 @@
 import random
 from datetime import timedelta
-from rest_framework import generics, status, viewsets
+from rest_framework import generics, status, viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from django.conf import settings
-
+from rest_framework_simplejwt.tokens import RefreshToken
 from farmdirect.utils import send_otp
-from .models import UserModel
-from .serializers import UserSerializer
+from .models import UserModel, Product, Order
+from .serializers import UserSerializer, ProductSerializer, OrderSerializer, LoginSerializer
+from .permissions import IsFarmer, IsBuyer
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = UserModel.objects.all()
@@ -68,3 +69,36 @@ class UserViewSet(viewsets.ModelViewSet):
         instance.save()
         send_otp(instance.phone_number, otp)
         return Response("Successfully generated a new OTP.", status=status.HTTP_200_OK)
+    
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsFarmer]
+
+    def perform_create(self, serializer):
+        serializer.save(farmer=self.request.user.profile)
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    permission_classes = [IsBuyer]
+
+    def perform_create(self, serializer):
+        serializer.save(buyer=self.request.user.profile)
+        
+        
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+        
+        # Generate JWT token
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }, status=status.HTTP_200_OK)
