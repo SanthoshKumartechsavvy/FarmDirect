@@ -61,9 +61,9 @@ class UserProfile(models.Model):
         UserModel,
         related_name="profile",
         on_delete=models.CASCADE,
-        primary_key=True,
+        primary_key=True, 
     )
-    username = models.CharField(max_length=50, unique=True, default="default_username")
+    username = models.CharField(max_length=50, unique=True, null = True, default="default_username")
     role = models.CharField(
         max_length=10,
         choices=USER_ROLES,

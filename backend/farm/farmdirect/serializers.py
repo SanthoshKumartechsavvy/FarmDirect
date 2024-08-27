@@ -13,7 +13,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer()
-    
+
     class Meta:
         model = UserModel
         fields = (
@@ -40,7 +40,23 @@ class UserSerializer(serializers.ModelSerializer):
         
         send_otp(validated_data["phone_number"], otp)
         return user
-    
+
+    def update(self, instance, validated_data):
+        profile_data = validated_data.pop('profile', None)
+
+        # Update the user instance
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
+        instance.save()
+
+        # Update the nested profile data
+        if profile_data:
+            profile, created = UserProfile.objects.get_or_create(user=instance)
+            profile.username = profile_data.get('username', profile.username)
+            profile.role = profile_data.get('role', profile.role)
+            profile.save()
+
+        return instance
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -50,8 +66,6 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
-        
-        
         
 class LoginSerializer(serializers.Serializer):
     phone_number = serializers.CharField()
