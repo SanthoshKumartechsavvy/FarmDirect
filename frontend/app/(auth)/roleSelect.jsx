@@ -2,6 +2,7 @@ import { View, Text, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image, TouchableOpacity } from 'react-native'
+import { router } from 'expo-router'
 
 
 const roleSelect = () => {
@@ -20,7 +21,7 @@ const roleSelect = () => {
             
             <TouchableOpacity 
               className={`bg-white round rounded-xl flex-row min-h-[62px] justify-center items-center w-full mt-7 `}
-              // onPress={handlePress}
+              onPress={() => router.push('/home')}
               activeOpacity={0.7}
             >
 
@@ -33,7 +34,7 @@ const roleSelect = () => {
 
             <TouchableOpacity 
               className={`bg-white round rounded-xl flex-row  min-h-[62px] justify-center items-center w-full mt-7 `}
-              // onPress={handlePress}
+              onPress={() => router.push('/home')}
               activeOpacity={0.7}
             >
 

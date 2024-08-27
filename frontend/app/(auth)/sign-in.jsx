@@ -1,14 +1,54 @@
 import { View, Text, ScrollView } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'react-native'
 import FormField from '../../components/FormField'
 import { router, Redirect } from 'expo-router'
 import CustomButton from '../../components/CustomButton'
+import { useNavigation } from '@react-navigation/native'
+import axios from 'axios'
+import auth from '../api/auth'
 
 const SignIn = () => {
 
     const [mobileNumber, setMobileNumber] = useState('');
+    const navigation = useNavigation();
+    // const [userId, setUserId] = useState(null);
+
+    useEffect(()=> {
+      registrationForm.phone_number = mobileNumber;
+    },[mobileNumber]);
+
+    const [registrationForm, setRegistrationForm] = useState({
+      "phone_number": mobileNumber,
+      "profile": {
+          "username": "luffy",
+          "role": "buyer"
+      }
+    });
+
+
+    console.log(registrationForm);
+    console.log(mobileNumber);
+
+    const handleSubmit = () => {
+      handleRegister();
+      
+      
+    }
+
+    const handleRegister = async () => {
+      try {
+        const response = await auth.post('/register/', registrationForm);
+        const userId = response.data.id;
+        navigation.navigate('otpVerify', { userId });
+        // router.push('/otpVerify');
+        // console.log(userId);
+        
+      } catch (error) {
+        console.error('Registration failed:', error);
+      } 
+    }
 
   return (
     <SafeAreaView className=" flex-1 justify-center bg-primary h-full">
@@ -31,7 +71,7 @@ const SignIn = () => {
             
             <CustomButton
                 title="Get OTP"
-                handlePress={()=> router.push('/otpVerify')}
+                handlePress={handleRegister}
                 containerStyles="w-full mt-7"
             />
         </View>
@@ -41,3 +81,5 @@ const SignIn = () => {
 }
 
 export default SignIn
+
+
