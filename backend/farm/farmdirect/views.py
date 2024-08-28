@@ -1,25 +1,38 @@
 import random
 from datetime import timedelta
-from rest_framework import generics, status, viewsets, permissions
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from farmdirect.utils import send_otp
-from .models import UserModel, Product, Order
-from .serializers import UserSerializer, ProductSerializer, OrderSerializer, LoginSerializer
-from .permissions import IsFarmer, IsBuyer
+from .models import UserModel, Product, Order, UserProfile
+from .serializers import UserProfileSerializer, UserSerializer, ProductSerializer, OrderSerializer, LoginSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = UserModel.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [AllowAny]  # Allow registration without authentication
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = UserModel.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]  # Allow access to user-related actions without authentication
+    
+    @action(detail=True, methods=["PATCH"], permission_classes=[AllowAny])
+    def update_profile_pic(self, request, pk=None):
+        user = self.get_object()
+        profile_data = request.data.get('profile', {})
+        profile_data['profile_pic'] = request.FILES.get('profile_pic', None)
+        serializer = self.get_serializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
-    @action(detail=True, methods=["PATCH"])
+    @action(detail=True, methods=["PATCH"], permission_classes=[AllowAny])  # OTP verification should not require prior authentication
     def verify_otp(self, request, pk=None):
         instance = self.get_object()
         otp = request.data.get("otp")
@@ -43,7 +56,7 @@ class UserViewSet(viewsets.ModelViewSet):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    @action(detail=True, methods=["PATCH"])
+    @action(detail=True, methods=["PATCH"], permission_classes=[AllowAny])  # Regenerate OTP without authentication
     def regenerate_otp(self, request, pk=None):
         instance = self.get_object()
         if int(instance.max_otp_try) == 0 and timezone.now() < instance.otp_max_out:
@@ -60,7 +73,6 @@ class UserViewSet(viewsets.ModelViewSet):
         instance.otp_expiry = otp_expiry
         instance.max_otp_try = max_otp_try
         if max_otp_try == 0:
-            # Set cool-down time
             otp_max_out = timezone.now() + timedelta(hours=1)
             instance.otp_max_out = otp_max_out
         else:
@@ -69,11 +81,11 @@ class UserViewSet(viewsets.ModelViewSet):
         instance.save()
         send_otp(instance.phone_number, otp)
         return Response("Successfully generated a new OTP.", status=status.HTTP_200_OK)
-    
+
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsFarmer]
+    permission_classes = [IsAuthenticated]  # Allow access to product-related actions without authentication
 
     def perform_create(self, serializer):
         serializer.save(farmer=self.request.user.profile)
@@ -81,15 +93,14 @@ class ProductViewSet(viewsets.ModelViewSet):
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    permission_classes = [IsBuyer]
+    permission_classes = [IsAuthenticated]  # Allow access to order-related actions without authentication
 
     def perform_create(self, serializer):
         serializer.save(buyer=self.request.user.profile)
         
-        
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]  # Allow anyone to log in
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -102,3 +113,20 @@ class LoginView(generics.GenericAPIView):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }, status=status.HTTP_200_OK)
+        
+class UploadProfilePictureView(generics.UpdateAPIView):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [AllowAny]  # Allow profile picture upload without authentication
+
+    def get_object(self):
+        # Adjust this to get the profile of the current user
+        return self.request.user.profile
+    
+    def patch(self, request, *args, **kwargs):
+        user_profile = self.get_object()
+        serializer = self.get_serializer(user_profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
