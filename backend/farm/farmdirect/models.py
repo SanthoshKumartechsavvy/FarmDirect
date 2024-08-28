@@ -45,6 +45,7 @@ class UserModel(AbstractBaseUser, PermissionsMixin):
     user_registered_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "phone_number"
+    REQUIRED_FIELDS = []
 
     objects = UserManager()
 
@@ -56,14 +57,14 @@ class UserProfile(models.Model):
         ('farmer', 'Farmer'),
         ('buyer', 'Buyer'),
     )
-    
+
     user = models.OneToOneField(
         UserModel,
         related_name="profile",
         on_delete=models.CASCADE,
-        primary_key=True, 
+        primary_key=True,
     )
-    username = models.CharField(max_length=50, unique=True, null = True, default="default_username")
+    username = models.CharField(max_length=50, unique=True, null=True, default="default_username")
     role = models.CharField(
         max_length=10,
         choices=USER_ROLES,
@@ -71,9 +72,11 @@ class UserProfile(models.Model):
         null=False,
         blank=False
     )
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     
     def __str__(self):
         return f"{self.user.phone_number} - {self.role}"
+
     
 class Product(models.Model):
     CATEGORY_CHOICES = (
