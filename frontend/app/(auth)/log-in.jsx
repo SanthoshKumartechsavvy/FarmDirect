@@ -1,39 +1,20 @@
-import { View, Text, ScrollView } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'react-native'
 import FormField from '../../components/FormField'
 import { router, Redirect } from 'expo-router'
 import CustomButton from '../../components/CustomButton'
-import { useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native'
+import axios from 'axios'
 import auth from '../api/auth'
 
+const logIn = () => {
+
+    const [mobileNumber, setMobileNumber] = useState('');
+    const [password, setPassword] = useState('');
 
 
-
-const otpVerify = () => {
-
-    const route = useRoute();
-    const {userId} = route.params;
-    const [otp,setOtp] = useState('');
-
-    useEffect(()=> {
-      otpForm.otp = otp;
-    },[otp]);
-
-    const [otpForm, setOtpForm] = useState({
-      "otp": otp,
-    });
-
-
-    const handleVerifyOtp = async () => {
-      try {
-        const response = await auth.patch(`/user/${userId}/verify_otp/`, otpForm);
-        router.push('/enterUsername');
-      } catch (error) {
-        console.error('Otp verification failed:', error);
-      } 
-    };
 
   return (
     <SafeAreaView className=" flex-1 justify-center bg-primary h-full">
@@ -45,24 +26,30 @@ const otpVerify = () => {
                 resizeMode='contain'
             />
             <Text className="text-lg font-semibold mt-2 w-full text-center">FarmDirect</Text>
-            <Text className="text-2xl self-start w-full text-white font-semibold mt-[20%] ">SIGN UP / LOGIN</Text>
+            <Text className="text-2xl self-start w-full text-white font-semibold mt-[20%] ">LOG IN</Text>
             <FormField
-                title="Verify OTP"
-                value={otp}
-                handleChangeText = {(e)=> setOtp(e)}
-                placeholder="Enter the OTP received"
+                title="Mobile Number"
+                value={mobileNumber}
+                handleChangeText = {(e)=> setMobileNumber(e)}
+                placeholder="Your mobile number"
                 keyboardType = "numeric"
             />
-            
+            <FormField
+                title="Password"
+                value={password}
+                handleChangeText = {(e)=> setPassword(e)}
+                placeholder="Your password"
+                keyboardType = "numeric"
+            />
             <CustomButton
-                title="Continue"
-                handlePress={handleVerifyOtp}
+                title="Log In"
                 containerStyles="w-full mt-7"
             />
+            
         </View>
       </ScrollView>
     </SafeAreaView>
   )
 }
 
-export default otpVerify
+export default logIn

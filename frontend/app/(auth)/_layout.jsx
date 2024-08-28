@@ -10,6 +10,10 @@ const _layout = () => {
             options={{ headerShown: false}}
         />
         <Stack.Screen
+            name='log-in'
+            options={{ headerShown: false}}
+        />
+        <Stack.Screen
             name='otpVerify'
             options={{ headerShown: false}}
         />

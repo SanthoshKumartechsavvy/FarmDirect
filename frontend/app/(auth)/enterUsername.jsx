@@ -12,7 +12,7 @@ const enterUsername = () => {
     const [username, setUsername] = useState('');
     const [image, setImage] = useState(null);
     
-
+    
     const uploadImage = async () => {
       try {
         await ImagePicker.requestCameraPermissionsAsync();
@@ -42,7 +42,7 @@ const enterUsername = () => {
     }
 
   return (
-    <SafeAreaView className=" flex-1 justify-center bg-primary h-full">
+    <SafeAreaView className=" flex-1 bg-primary h-full">
       <ScrollView contentContainerStyle={{ height: '100%'}}>
         <View className="w-full justify-center items-center h-[80vh] px-8 ">
             <Image
@@ -56,7 +56,7 @@ const enterUsername = () => {
 
             <TouchableOpacity onPress={uploadImage}>
 
-              <View className="w-[100px] h-[100px] mt-10 flex justify-center items-center bg-slate-700 rounded-full border border-black">
+              <View className="w-[100px] h-[100px]  mt-10 flex justify-center items-center bg-slate-700 rounded-full border border-black">
                 {
                   !image && 
                     <Image
@@ -64,6 +64,7 @@ const enterUsername = () => {
                         className="w-[38px] h-[32px]"
                         resizeMode='contain'
                       />
+            
                 }
 
                 {
@@ -81,21 +82,14 @@ const enterUsername = () => {
             </TouchableOpacity>
 
             <Text className="font-semibold mt-2 w-full text-center text-white"> Your Profile picture </Text>
-
-            {/* <View className="h-[31px] w-[31px] flex relative justify-center items-center rounded-full bg-camera border border-white">
-
-              <Image
-                source = {require('../../images/camera.png')}
-                className="w-[18px] h-[15px]"
-                resizeMode='contain'
-              />
+            {/* <View className="w-[30px] h-[30px] bottom-20 flex relative justify-center items-center mt-3 bg-plus rounded-full">
+                <Image
+                  source = {require('../../images/plusicon.png')}
+                  className="w-[12px] h-[12px]"
+                  resizeMode='contain'
+                />
             </View> */}
-            
-            {/* <Image
-              source = {require('../../images/camerabg.png')}
-              className= "h-[31px] w-[31px] relative top-[115px]"
-              resizeMethod='contain'
-            /> */}
+  
 
             <FormField
                 title="Enter Username"
